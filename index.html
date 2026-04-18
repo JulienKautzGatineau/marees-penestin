@@ -103,26 +103,155 @@
     pointer-events: none;
   }
 
-  /* Family + husky walking on the beach, drifting right → left */
+  /* Family group drifts slowly right → left across the beach */
   .family-svg {
     position: fixed;
     bottom: 50%;
     left: 0;
-    width: 230px;
-    height: 36px;
+    width: 260px;
+    height: 42px;
     z-index: 4;
     pointer-events: none;
     transition: bottom 1.6s cubic-bezier(.4,0,.2,1);
-    animation: familyWalk 95s linear infinite;
-    filter: drop-shadow(0 2px 2.5px rgba(0,0,0,0.3));
+    animation: familyWalk 75s linear infinite;
+    filter: drop-shadow(0 2px 2.5px rgba(0,0,0,0.35));
     will-change: transform;
   }
   @keyframes familyWalk {
-    from { transform: translateX(110vw); }
-    to   { transform: translateX(-100%); }
+    0%   { transform: translateX(110vw) translateY(0); }
+    33%  { transform: translateX(72vw) translateY(-2px); }
+    66%  { transform: translateX(30vw) translateY(2px); }
+    100% { transform: translateX(-100%) translateY(-1px); }
   }
   @media (max-width: 480px) {
-    .family-svg { width: 180px; height: 28px; animation-duration: 75s; }
+    .family-svg { width: 200px; height: 32px; animation-duration: 60s; }
+  }
+
+  /* Per-character wandering — each one drifts around its base position
+     with its own period, amplitude and rhythm so the group moves naturally */
+  .family-svg .wander {
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+  }
+  .family-svg .wander.w-husky { animation-name: wanderHusky; animation-duration: 7.5s; }
+  .family-svg .wander.w-a1    { animation-name: wanderA1;    animation-duration: 13s; }
+  .family-svg .wander.w-k1    { animation-name: wanderK1;    animation-duration: 9.5s; }
+  .family-svg .wander.w-k2    { animation-name: wanderK2;    animation-duration: 7s; }
+  .family-svg .wander.w-k3    { animation-name: wanderK3;    animation-duration: 8.5s; }
+  .family-svg .wander.w-a2    { animation-name: wanderA2;    animation-duration: 11.5s; }
+
+  /* Husky runs ahead, comes back, big drifts */
+  @keyframes wanderHusky {
+    0%   { transform: translate(0px, 0px); }
+    15%  { transform: translate(-15px, -3px); }
+    28%  { transform: translate(-26px, 1px); }
+    40%  { transform: translate(-12px, -4px); }
+    55%  { transform: translate(8px, 2px); }
+    70%  { transform: translate(-22px, -3px); }
+    85%  { transform: translate(-6px, 1px); }
+    100% { transform: translate(0px, 0px); }
+  }
+  /* Kids — medium playful drift */
+  @keyframes wanderK1 {
+    0%   { transform: translate(0px, 0px); }
+    22%  { transform: translate(-7px, -3px); }
+    45%  { transform: translate(6px, 2px); }
+    68%  { transform: translate(-9px, -2px); }
+    100% { transform: translate(0px, 0px); }
+  }
+  @keyframes wanderK2 {
+    0%   { transform: translate(0px, 0px); }
+    20%  { transform: translate(8px, -3px); }
+    42%  { transform: translate(-7px, 3px); }
+    65%  { transform: translate(5px, -3px); }
+    88%  { transform: translate(-4px, 2px); }
+    100% { transform: translate(0px, 0px); }
+  }
+  @keyframes wanderK3 {
+    0%   { transform: translate(0px, 0px); }
+    28%  { transform: translate(-5px, 3px); }
+    55%  { transform: translate(9px, -3px); }
+    80%  { transform: translate(-7px, 1px); }
+    100% { transform: translate(0px, 0px); }
+  }
+  /* Adults — small steady drift */
+  @keyframes wanderA1 {
+    0%, 100% { transform: translate(0px, 0px); }
+    25%      { transform: translate(-3px, -1.5px); }
+    50%      { transform: translate(2.5px, 1.5px); }
+    75%      { transform: translate(-1.5px, -2px); }
+  }
+  @keyframes wanderA2 {
+    0%, 100% { transform: translate(0px, 0px); }
+    33%      { transform: translate(2.5px, -1.5px); }
+    66%      { transform: translate(-3px, 2px); }
+  }
+
+  /* Cartoon bobbing animation per character */
+  .family-svg .walker {
+    transform-origin: center bottom;
+    transform-box: fill-box;
+    animation: walkBob 0.42s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  }
+  .family-svg .walker.husky-walker {
+    animation: huskyBob 0.26s ease-in-out infinite;
+  }
+  /* Different phase delays for staggered, lively group walk */
+  .family-svg .w1 { animation-delay: 0s; }
+  .family-svg .w2 { animation-delay: 0.21s; }
+  .family-svg .w3 { animation-delay: 0.05s; }
+  .family-svg .w4 { animation-delay: 0.27s; }
+  .family-svg .w5 { animation-delay: 0.12s; }
+
+  @keyframes walkBob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+  }
+  @keyframes huskyBob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-5px); }
+  }
+
+  /* Leg swing — alternating front/back per character */
+  .family-svg .leg-l, .family-svg .leg-r {
+    transform-box: fill-box;
+    transform-origin: top center;
+    animation-duration: 0.42s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+  }
+  .family-svg .leg-l { animation-name: legSwingL; }
+  .family-svg .leg-r { animation-name: legSwingR; }
+  @keyframes legSwingL {
+    0%, 100% { transform: rotate(-22deg); }
+    50%      { transform: rotate(22deg); }
+  }
+  @keyframes legSwingR {
+    0%, 100% { transform: rotate(22deg); }
+    50%      { transform: rotate(-22deg); }
+  }
+  /* Arms swing opposite to legs */
+  .family-svg .arm-l, .family-svg .arm-r {
+    transform-box: fill-box;
+    transform-origin: top center;
+    animation-duration: 0.42s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+  }
+  .family-svg .arm-l { animation-name: armSwingL; }
+  .family-svg .arm-r { animation-name: armSwingR; }
+  @keyframes armSwingL {
+    0%, 100% { transform: rotate(18deg); }
+    50%      { transform: rotate(-18deg); }
+  }
+  @keyframes armSwingR {
+    0%, 100% { transform: rotate(-18deg); }
+    50%      { transform: rotate(18deg); }
+  }
+  /* Husky legs run faster */
+  .family-svg .husky .leg-l,
+  .family-svg .husky .leg-r {
+    animation-duration: 0.26s;
   }
 
   /* CENTER */
@@ -563,70 +692,87 @@
   <div class="wet-sand" id="wetsand" style="bottom: 50%;"></div>
   <canvas id="sea-canvas"></canvas>
 
-  <!-- Family of 5 + husky, walking right → left along the waterline -->
+  <!-- Family of 5 + husky, in color, walking with cartoon bounce -->
   <svg id="family" class="family-svg" viewBox="0 0 360 50" preserveAspectRatio="xMidYMax meet">
-    <g fill="#1a1a1a" stroke="#1a1a1a" opacity="0.88">
-      <!-- Husky running ahead (leftmost) -->
-      <g transform="translate(28, 38)">
-        <ellipse cx="0" cy="0" rx="9" ry="4"/>
-        <ellipse cx="-9" cy="-2" rx="4" ry="3.5"/>
-        <ellipse cx="-13" cy="-1" rx="2.5" ry="1.5"/>
-        <path d="M-9 -5 L-10 -8 L-7 -5 Z"/>
-        <path d="M9 -1 Q 14 -3 12 -7" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-        <line x1="-5" y1="3" x2="-7" y2="9" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="-2" y1="3" x2="0" y2="9" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="3" y1="3" x2="1" y2="9" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="6" y1="3" x2="8" y2="9" stroke-width="1.8" stroke-linecap="round"/>
+    <!-- Husky (leftmost, running ahead) — classic black & white -->
+    <g class="husky" transform="translate(28, 38)">
+      <g class="wander w-husky"><g class="walker husky-walker">
+        <ellipse cx="0" cy="0" rx="9" ry="4" fill="#e8e8e6"/>
+        <ellipse cx="0" cy="2" rx="7" ry="2" fill="#f6f6f4"/>
+        <ellipse cx="-9" cy="-2" rx="4" ry="3.5" fill="#f0f0ee"/>
+        <ellipse cx="-9" cy="-3" rx="3" ry="1.2" fill="#3a3a38"/>
+        <ellipse cx="-13" cy="-1" rx="2.5" ry="1.5" fill="#d4d4d2"/>
+        <path d="M-9 -5 L-10 -8 L-7 -5 Z" fill="#3a3a38"/>
+        <path d="M9 -1 Q 14 -3 12 -7" stroke="#5a5a58" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <g class="leg-l"><line x1="-5" y1="3" x2="-7" y2="9" stroke="#3a3a38" stroke-width="1.8" stroke-linecap="round"/></g>
+        <g class="leg-r"><line x1="-2" y1="3" x2="0" y2="9" stroke="#3a3a38" stroke-width="1.8" stroke-linecap="round"/></g>
+        <g class="leg-r"><line x1="3" y1="3" x2="1" y2="9" stroke="#3a3a38" stroke-width="1.8" stroke-linecap="round"/></g>
+        <g class="leg-l"><line x1="6" y1="3" x2="8" y2="9" stroke="#3a3a38" stroke-width="1.8" stroke-linecap="round"/></g></g>
       </g>
+    </g>
 
-      <!-- Adult 1 (parent leading) -->
-      <g transform="translate(78, 16)">
-        <circle cx="0" cy="0" r="3.5"/>
-        <path d="M-3 4 L-2.5 16 L2.5 16 L3 4 Z"/>
-        <line x1="-1.5" y1="16" x2="-3" y2="29" stroke-width="2.4" stroke-linecap="round"/>
-        <line x1="1.5" y1="16" x2="3.5" y2="29" stroke-width="2.4" stroke-linecap="round"/>
-        <line x1="-3" y1="7" x2="-5" y2="14" stroke-width="2" stroke-linecap="round"/>
-        <line x1="3" y1="7" x2="5" y2="14" stroke-width="2" stroke-linecap="round"/>
+    <!-- Adult 1 (dad, leading) — white shirt + navy pants -->
+    <g transform="translate(78, 16)">
+      <g class="wander w-a1"><g class="walker w1">
+        <circle cx="0" cy="0" r="3.5" fill="#e8c4a0"/>
+        <path d="M-3.5 -1 Q 0 -5 3.5 -1 L3 1 L-3 1 Z" fill="#3a2410"/>
+        <path d="M-3 4 L-2.5 16 L2.5 16 L3 4 Z" fill="#ffffff"/>
+        <g class="leg-l"><line x1="0" y1="16" x2="-2.5" y2="29" stroke="#1c3055" stroke-width="2.4" stroke-linecap="round"/></g>
+        <g class="leg-r"><line x1="0" y1="16" x2="3" y2="29" stroke="#1c3055" stroke-width="2.4" stroke-linecap="round"/></g>
+        <g class="arm-l"><line x1="-3" y1="7" x2="-5" y2="14" stroke="#e8c4a0" stroke-width="2" stroke-linecap="round"/></g>
+        <g class="arm-r"><line x1="3" y1="7" x2="5" y2="14" stroke="#e8c4a0" stroke-width="2" stroke-linecap="round"/></g></g>
       </g>
+    </g>
 
-      <!-- Kid 1 (medium) -->
-      <g transform="translate(127, 22)">
-        <circle cx="0" cy="0" r="3"/>
-        <path d="M-2.5 3.5 L-2 13 L2 13 L2.5 3.5 Z"/>
-        <line x1="-1.5" y1="13" x2="-2.5" y2="23" stroke-width="2" stroke-linecap="round"/>
-        <line x1="1.5" y1="13" x2="3" y2="23" stroke-width="2" stroke-linecap="round"/>
-        <line x1="-2.5" y1="6" x2="-4" y2="11" stroke-width="1.6" stroke-linecap="round"/>
-        <line x1="2.5" y1="6" x2="4" y2="11" stroke-width="1.6" stroke-linecap="round"/>
+    <!-- Kid 1 — yellow shirt + blue shorts, brown hair -->
+    <g transform="translate(127, 22)">
+      <g class="wander w-k1"><g class="walker w2">
+        <circle cx="0" cy="0" r="3" fill="#e8c4a0"/>
+        <path d="M-3 -1 Q 0 -4.5 3 -1 L2.5 1 L-2.5 1 Z" fill="#5a3818"/>
+        <path d="M-2.5 3.5 L-2 13 L2 13 L2.5 3.5 Z" fill="#fdd835"/>
+        <g class="leg-l"><line x1="0" y1="13" x2="-2" y2="23" stroke="#3b7ad9" stroke-width="2" stroke-linecap="round"/></g>
+        <g class="leg-r"><line x1="0" y1="13" x2="2.5" y2="23" stroke="#3b7ad9" stroke-width="2" stroke-linecap="round"/></g>
+        <g class="arm-l"><line x1="-2.5" y1="6" x2="-4" y2="11" stroke="#e8c4a0" stroke-width="1.6" stroke-linecap="round"/></g>
+        <g class="arm-r"><line x1="2.5" y1="6" x2="4" y2="11" stroke="#e8c4a0" stroke-width="1.6" stroke-linecap="round"/></g></g>
       </g>
+    </g>
 
-      <!-- Kid 2 (smallest, in middle) -->
-      <g transform="translate(170, 26)">
-        <circle cx="0" cy="0" r="2.5"/>
-        <path d="M-2 3 L-1.5 11 L1.5 11 L2 3 Z"/>
-        <line x1="-1" y1="11" x2="-2" y2="19" stroke-width="1.7" stroke-linecap="round"/>
-        <line x1="1" y1="11" x2="2.5" y2="19" stroke-width="1.7" stroke-linecap="round"/>
-        <line x1="-2" y1="5" x2="-3.5" y2="9" stroke-width="1.4" stroke-linecap="round"/>
-        <line x1="2" y1="5" x2="3.5" y2="9" stroke-width="1.4" stroke-linecap="round"/>
+    <!-- Kid 2 (smallest) — red shirt, beige shorts, blonde -->
+    <g transform="translate(170, 26)">
+      <g class="wander w-k2"><g class="walker w3">
+        <circle cx="0" cy="0" r="2.5" fill="#f2cba4"/>
+        <path d="M-2.5 -0.5 Q 0 -4 2.5 -0.5 L2 1 L-2 1 Z" fill="#d4b878"/>
+        <path d="M-2 3 L-1.5 11 L1.5 11 L2 3 Z" fill="#e74c3c"/>
+        <g class="leg-l"><line x1="0" y1="11" x2="-1.5" y2="19" stroke="#a87850" stroke-width="1.7" stroke-linecap="round"/></g>
+        <g class="leg-r"><line x1="0" y1="11" x2="2" y2="19" stroke="#a87850" stroke-width="1.7" stroke-linecap="round"/></g>
+        <g class="arm-l"><line x1="-2" y1="5" x2="-3.5" y2="9" stroke="#f2cba4" stroke-width="1.4" stroke-linecap="round"/></g>
+        <g class="arm-r"><line x1="2" y1="5" x2="3.5" y2="9" stroke="#f2cba4" stroke-width="1.4" stroke-linecap="round"/></g></g>
       </g>
+    </g>
 
-      <!-- Kid 3 (medium-tall) -->
-      <g transform="translate(213, 20)">
-        <circle cx="0" cy="0" r="3"/>
-        <path d="M-2.5 3.5 L-2 14 L2 14 L2.5 3.5 Z"/>
-        <line x1="-1.5" y1="14" x2="-2.5" y2="25" stroke-width="2.1" stroke-linecap="round"/>
-        <line x1="1.5" y1="14" x2="3" y2="25" stroke-width="2.1" stroke-linecap="round"/>
-        <line x1="-2.5" y1="6" x2="-4" y2="12" stroke-width="1.7" stroke-linecap="round"/>
-        <line x1="2.5" y1="6" x2="4" y2="12" stroke-width="1.7" stroke-linecap="round"/>
+    <!-- Kid 3 — green shirt, brown shorts, dark hair -->
+    <g transform="translate(213, 20)">
+      <g class="wander w-k3"><g class="walker w4">
+        <circle cx="0" cy="0" r="3" fill="#d8a880"/>
+        <path d="M-3 -1 Q 0 -4.5 3 -1 L2.5 1 L-2.5 1 Z" fill="#1a0e05"/>
+        <path d="M-2.5 3.5 L-2 14 L2 14 L2.5 3.5 Z" fill="#6bb84f"/>
+        <g class="leg-l"><line x1="0" y1="14" x2="-2" y2="25" stroke="#5a3818" stroke-width="2.1" stroke-linecap="round"/></g>
+        <g class="leg-r"><line x1="0" y1="14" x2="2.5" y2="25" stroke="#5a3818" stroke-width="2.1" stroke-linecap="round"/></g>
+        <g class="arm-l"><line x1="-2.5" y1="6" x2="-4" y2="12" stroke="#d8a880" stroke-width="1.7" stroke-linecap="round"/></g>
+        <g class="arm-r"><line x1="2.5" y1="6" x2="4" y2="12" stroke="#d8a880" stroke-width="1.7" stroke-linecap="round"/></g></g>
       </g>
+    </g>
 
-      <!-- Adult 2 (parent at back) -->
-      <g transform="translate(265, 16)">
-        <circle cx="0" cy="0" r="3.5"/>
-        <path d="M-3 4 L-2.5 16 L2.5 16 L3 4 Z"/>
-        <line x1="-1.5" y1="16" x2="-3" y2="29" stroke-width="2.4" stroke-linecap="round"/>
-        <line x1="1.5" y1="16" x2="3.5" y2="29" stroke-width="2.4" stroke-linecap="round"/>
-        <line x1="-3" y1="7" x2="-5" y2="14" stroke-width="2" stroke-linecap="round"/>
-        <line x1="3" y1="7" x2="5" y2="14" stroke-width="2" stroke-linecap="round"/>
+    <!-- Adult 2 (mom, at back) — pink shirt, white pants, auburn hair (longer) -->
+    <g transform="translate(265, 16)">
+      <g class="wander w-a2"><g class="walker w5">
+        <circle cx="0" cy="0" r="3.5" fill="#e8c4a0"/>
+        <path d="M-3.5 0 Q 0 -5 3.5 0 L4 5 L-4 5 Z" fill="#a85a28"/>
+        <path d="M-3 4 L-2.5 16 L2.5 16 L3 4 Z" fill="#e885a0"/>
+        <g class="leg-l"><line x1="0" y1="16" x2="-2.5" y2="29" stroke="#f5f5f0" stroke-width="2.4" stroke-linecap="round"/></g>
+        <g class="leg-r"><line x1="0" y1="16" x2="3" y2="29" stroke="#f5f5f0" stroke-width="2.4" stroke-linecap="round"/></g>
+        <g class="arm-l"><line x1="-3" y1="7" x2="-5" y2="14" stroke="#e8c4a0" stroke-width="2" stroke-linecap="round"/></g>
+        <g class="arm-r"><line x1="3" y1="7" x2="5" y2="14" stroke="#e8c4a0" stroke-width="2" stroke-linecap="round"/></g></g>
       </g>
     </g>
   </svg>
