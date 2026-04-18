@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Marée Pénestin" />
+<meta name="theme-color" content="#103e5b" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%231f5f86'/%3E%3Crect y='30' width='180' height='40' fill='%23c4824a'/%3E%3Crect y='110' width='180' height='70' fill='%23e8c896'/%3E%3Cpath d='M0 110 Q 45 95 90 110 T 180 110 V125 H0 Z' fill='%233d8bb1'/%3E%3C/svg%3E" />
+<title>Marée Pénestin</title>
+<style>
+  :root {
+    --sand-1: #f6e4c4;
+    --sand-2: #e8c896;
+    --sand-3: #c79968;
+    --sea-deep: #103e5b;
+    --sea-mid:  #2c7396;
+    --sea-light:#5aa3c5;
+    --sea-foam: #d8edf5;
+    --sky-1: #c8e6f3;
+    --sky-2: #f4dfba;
+    --text: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #103e5b;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* SKY */
+  .sky {
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse at 80% 25%, rgba(255,255,255,0.45) 0, transparent 14%),
+      radial-gradient(ellipse at 25% 35%, rgba(255,255,255,0.35) 0, transparent 12%),
+      radial-gradient(ellipse at 55% 18%, rgba(255,255,255,0.28) 0, transparent 10%),
+      linear-gradient(to bottom, var(--sky-1) 0%, #e1edd8 55%, var(--sky-2) 90%, var(--sand-1) 100%);
+    z-index: 0;
+  }
+
+  /* CLIFF */
+  .cliff-svg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 26vh;
+    min-height: 180px;
+    z-index: 5;
+    pointer-events: none;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.3));
+  }
+
+  /* SAND */
+  .sand {
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(circle at 12% 78%, rgba(255,255,255,0.4) 0, transparent 3px),
+      radial-gradient(circle at 27% 92%, rgba(80,40,20,0.35) 0, transparent 4px),
+      radial-gradient(circle at 38% 84%, rgba(255,255,255,0.3) 0, transparent 2px),
+      radial-gradient(circle at 49% 95%, rgba(80,40,20,0.25) 0, transparent 3px),
+      radial-gradient(circle at 62% 88%, rgba(255,255,255,0.35) 0, transparent 4px),
+      radial-gradient(circle at 73% 82%, rgba(80,40,20,0.3) 0, transparent 3px),
+      radial-gradient(circle at 84% 94%, rgba(255,255,255,0.3) 0, transparent 3px),
+      radial-gradient(circle at 92% 86%, rgba(80,40,20,0.25) 0, transparent 4px),
+      radial-gradient(circle at 6% 96%, rgba(80,40,20,0.28) 0, transparent 3px),
+      radial-gradient(circle at 55% 78%, rgba(255,255,255,0.25) 0, transparent 2px),
+      radial-gradient(circle at 18% 65%, rgba(80,40,20,0.2) 0, transparent 3px),
+      radial-gradient(circle at 88% 70%, rgba(255,255,255,0.25) 0, transparent 2px),
+      radial-gradient(circle at 35% 60%, rgba(80,40,20,0.18) 0, transparent 3px),
+      radial-gradient(ellipse 60% 30% at 50% 40%, rgba(255,255,255,0.08), transparent 70%),
+      linear-gradient(to bottom,
+        var(--sand-1) 0%,
+        var(--sand-2) 55%,
+        var(--sand-3) 100%);
+    z-index: 1;
+  }
+
+  .wet-sand {
+    position: fixed; left: 0; right: 0;
+    height: 50px;
+    background: linear-gradient(to bottom,
+      rgba(80, 40, 20, 0.0) 0%,
+      rgba(80, 40, 20, 0.3) 50%,
+      rgba(80, 40, 20, 0.55) 100%);
+    z-index: 2;
+    transition: bottom 1.6s cubic-bezier(.4,0,.2,1);
+    pointer-events: none;
+  }
+
+  #sea-canvas {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  /* CENTER */
+  .center {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -55%);
+    text-align: center;
+    z-index: 10;
+    color: var(--text);
+    text-shadow: 0 2px 14px rgba(0,0,0,0.55), 0 0 24px rgba(0,0,0,0.3);
+    user-select: none;
+  }
+  .city {
+    font-size: 14px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    opacity: 0.92;
+    margin-bottom: 6px;
+    font-weight: 300;
+  }
+  .temp-air {
+    font-size: clamp(64px, 16vw, 140px);
+    font-weight: 200;
+    line-height: 1;
+    letter-spacing: -3px;
+  }
+  .temp-air span.unit {
+    font-size: 0.4em;
+    vertical-align: top;
+    margin-left: 4px;
+    font-weight: 300;
+  }
+  .temp-water {
+    margin-top: 10px;
+    font-size: clamp(16px, 3.6vw, 22px);
+    font-weight: 300;
+    opacity: 0.95;
+  }
+  .temp-water .icon { margin-right: 6px; }
+
+  /* TOP BAR */
+  .topbar {
+    position: fixed;
+    top: calc(26vh + 10px);
+    left: 0; right: 0;
+    padding: 0 22px;
+    z-index: 11;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    color: var(--text);
+    text-shadow: 0 1px 8px rgba(0,0,0,0.5), 0 0 14px rgba(0,0,0,0.35);
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  .topbar .col { line-height: 1.5; }
+  .topbar .col.right { text-align: right; }
+  .topbar .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0.78;
+    margin-bottom: 2px;
+  }
+  .topbar .val { font-size: 18px; font-weight: 300; }
+
+  /* BOTTOM PANEL — combines time slider + tides + sun */
+  .bottom-panel {
+    position: fixed;
+    left: 0; right: 0;
+    bottom: 0;
+    padding: 14px 18px max(14px, env(safe-area-inset-bottom, 14px));
+    z-index: 12;
+    color: var(--text);
+    text-shadow: 0 1px 8px rgba(0,0,0,0.6);
+    background: linear-gradient(to top, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.05) 70%, transparent 100%);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .time-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .time-display { display: flex; align-items: baseline; gap: 10px; }
+  .sel-day {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.85;
+  }
+  .sel-hour {
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 1px;
+  }
+  .now-btn {
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 14px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-shadow: none;
+    transition: opacity .2s;
+    font-family: inherit;
+  }
+  .now-btn:active { transform: scale(0.96); }
+  .now-btn.dim { opacity: 0.45; }
+
+  /* Range slider */
+  .slider-wrap {
+    position: relative;
+    margin: 6px 0 4px;
+  }
+  input[type="range"]#time-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+    height: 26px;
+  }
+  input[type="range"]#time-slider::-webkit-slider-runnable-track {
+    height: 4px;
+    background: linear-gradient(to right,
+      rgba(255,255,255,0.6) 0%,
+      rgba(255,255,255,0.6) var(--pct, 0%),
+      rgba(255,255,255,0.25) var(--pct, 0%),
+      rgba(255,255,255,0.25) 100%);
+    border-radius: 2px;
+    border: none;
+  }
+  input[type="range"]#time-slider::-moz-range-track {
+    height: 4px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 2px;
+    border: none;
+  }
+  input[type="range"]#time-slider::-moz-range-progress {
+    height: 4px;
+    background: rgba(255,255,255,0.65);
+    border-radius: 2px;
+  }
+  input[type="range"]#time-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    margin-top: -8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.45), 0 0 0 3px rgba(255,255,255,0.18);
+    cursor: grab;
+  }
+  input[type="range"]#time-slider::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.45), 0 0 0 3px rgba(255,255,255,0.18);
+    cursor: grab;
+  }
+
+  .day-labels {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-top: 2px;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+  }
+  .day-labels span {
+    text-align: center;
+    position: relative;
+    padding-top: 4px;
+  }
+  .day-labels span::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    width: 1px; height: 3px;
+    background: rgba(255,255,255,0.35);
+  }
+  .day-labels span:first-child { text-align: left; }
+  .day-labels span:first-child::before { left: 0; }
+  .day-labels span:last-child { text-align: right; }
+  .day-labels span:last-child::before { left: auto; right: 0; }
+
+  /* Info row (tides + sun) */
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 10px;
+    gap: 10px;
+  }
+  .tides { display: flex; gap: 12px; flex-wrap: wrap; }
+  .tide-item .type {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0.85;
+  }
+  .tide-item .time {
+    font-size: 16px;
+    font-weight: 300;
+    margin-top: 1px;
+  }
+  .tide-item .height {
+    font-size: 10px;
+    opacity: 0.78;
+  }
+  .sun {
+    text-align: right;
+    line-height: 1.45;
+    font-size: 12px;
+    opacity: 0.95;
+    white-space: nowrap;
+  }
+  .sun .label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0.78;
+  }
+  .sun .val { font-size: 14px; font-weight: 300; }
+
+  .loading {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50;
+    background: rgba(16, 62, 91, 0.92);
+    color: white; font-weight: 300;
+    letter-spacing: 1px;
+    transition: opacity .5s;
+  }
+  .loading.hidden { opacity: 0; pointer-events: none; }
+
+  .error {
+    position: fixed;
+    bottom: 200px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    padding: 8px 14px;
+    border-radius: 8px;
+    color: white;
+    font-size: 12px;
+    z-index: 100;
+    display: none;
+  }
+
+  .refresh {
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top, 14px));
+    right: 16px;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 18px;
+    font-size: 13px;
+    cursor: pointer;
+    z-index: 13;
+    text-shadow: none;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .refresh:active { transform: scale(0.96); }
+
+  /* ============================================================
+     RESPONSIVE — phones (portrait)
+     ============================================================ */
+  @media (max-width: 480px) {
+    .cliff-svg { height: 22vh; min-height: 150px; }
+    .topbar { top: calc(22vh + 8px); padding: 0 14px; }
+    .topbar .val { font-size: 16px; }
+    .topbar .label { font-size: 9px; letter-spacing: 1.2px; }
+    .city { font-size: 11px; letter-spacing: 4px; }
+    .temp-air { font-size: clamp(56px, 17vw, 110px); }
+    .temp-water { font-size: 13px; margin-top: 6px; }
+    .center { transform: translate(-50%, -60%); }
+    .bottom-panel { padding: 10px 14px max(10px, env(safe-area-inset-bottom, 10px)); }
+    .sel-hour { font-size: 18px; }
+    .sel-day { font-size: 10px; letter-spacing: 1.5px; }
+    .now-btn { padding: 4px 10px; font-size: 9px; }
+    .day-labels { font-size: 8.5px; }
+    .info-row { margin-top: 6px; }
+    .tide-item .time { font-size: 14px; }
+    .tide-item .height { font-size: 9px; }
+    .tide-item .type { font-size: 8px; letter-spacing: 1.2px; }
+    .tides { gap: 7px; }
+    .sun .val { font-size: 12px; }
+    .sun .label { font-size: 8px; }
+    .wet-sand { height: 32px; }
+    .refresh { width: 30px; height: 30px; padding: 4px; font-size: 12px; }
+  }
+
+  /* Very small / short phones (iPhone SE, mini) */
+  @media (max-width: 380px), (max-height: 700px) and (max-width: 480px) {
+    .cliff-svg { height: 19vh; min-height: 130px; }
+    .topbar { top: calc(19vh + 6px); }
+    .temp-air { font-size: clamp(50px, 16vw, 90px); }
+    .city { font-size: 10px; letter-spacing: 3px; }
+    .tides { gap: 5px; }
+  }
+
+  /* Landscape on phones — keep cliff small, prioritize the wave area */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .cliff-svg { height: 25vh; min-height: 80px; }
+    .topbar { top: calc(25vh + 4px); }
+    .center { transform: translate(-50%, -50%); }
+    .temp-air { font-size: clamp(40px, 9vw, 80px); }
+    .bottom-panel { padding: 6px 14px max(6px, env(safe-area-inset-bottom, 6px)); }
+    .info-row { margin-top: 4px; }
+  }
+</style>
+</head>
+<body>
+  <div class="sky"></div>
+
+  <svg class="cliff-svg" viewBox="0 0 1200 260" preserveAspectRatio="none">
+    <defs>
+      <!-- Vertical rain-erosion streaks (the Mine d'Or signature texture) -->
+      <!-- High X freq + very low Y freq = long, narrow vertical bands -->
+      <filter id="vertStreaks" x="0%" y="0%" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.45 0.005" numOctaves="3" seed="11" stitchTiles="stitch"/>
+        <feColorMatrix type="matrix"
+          values="0.45 0 0 0 0.05
+                  0.20 0 0 0 0.02
+                  0.05 0 0 0 0.005
+                  0    0 0 0.65 0"/>
+      </filter>
+
+      <!-- Secondary, finer vertical streaks -->
+      <filter id="vertStreaks2" x="0%" y="0%" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="1.2 0.012" numOctaves="2" seed="3"/>
+        <feColorMatrix type="matrix"
+          values="0.35 0 0 0 0.04
+                  0.18 0 0 0 0.02
+                  0.05 0 0 0 0.01
+                  0    0 0 0.4 0"/>
+      </filter>
+
+      <!-- Light highlight streaks (vertical bright stripes) -->
+      <filter id="lightStreaks" x="0%" y="0%" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.32 0.004" numOctaves="2" seed="19"/>
+        <feColorMatrix type="matrix"
+          values="0 0 0 0 1
+                  0 0 0 0 0.85
+                  0 0 0 0 0.55
+                  0 0 0 0.32 0"/>
+      </filter>
+
+      <!-- Bright orange/terracotta gradient (Mine d'Or in golden hour) -->
+      <linearGradient id="cliffMain" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"  stop-color="#f6b878"/>
+        <stop offset="18%" stop-color="#ea914a"/>
+        <stop offset="42%" stop-color="#d8722a"/>
+        <stop offset="68%" stop-color="#b85820"/>
+        <stop offset="88%" stop-color="#8a3e14"/>
+        <stop offset="100%" stop-color="#5e2a0c"/>
+      </linearGradient>
+
+      <!-- Subtle horizontal lighting (atmospheric haze near top, shadow at base) -->
+      <linearGradient id="cliffAtmo" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"  stop-color="rgba(255,240,210,0.18)"/>
+        <stop offset="40%" stop-color="rgba(255,255,255,0)"/>
+        <stop offset="80%" stop-color="rgba(0,0,0,0.05)"/>
+        <stop offset="100%" stop-color="rgba(0,0,0,0.25)"/>
+      </linearGradient>
+
+      <!-- Grass: vivid green like the photo -->
+      <linearGradient id="grassMain" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"  stop-color="#8aa852"/>
+        <stop offset="50%" stop-color="#637f34"/>
+        <stop offset="100%" stop-color="#3f5520"/>
+      </linearGradient>
+
+      <!-- Smoother cliff silhouette -->
+      <clipPath id="cliffClip">
+        <path d="M0 0 L1200 0 L1200 217.8 L1195.0 216.4 L1190.0 214.5 L1185.0 211.7 L1180.0 209.2 L1175.0 208.3 L1170.0 209.8 L1165.0 212.4 L1160.0 214.4 L1155.0 215.2 L1150.0 215.3 L1145.0 215.8 L1140.0 216.9 L1135.0 217.6 L1130.0 217.0 L1125.0 215.5 L1120.0 214.5 L1115.0 215.2 L1110.0 217.3 L1105.0 219.0 L1100.0 219.3 L1095.0 218.4 L1090.0 217.5 L1085.0 217.5 L1080.0 217.8 L1075.0 217.4 L1070.0 216.3 L1065.0 215.5 L1060.0 216.4 L1055.0 219.5 L1050.0 223.3 L1045.0 226.2 L1040.0 227.7 L1035.0 228.4 L1030.0 229.5 L1025.0 230.9 L1020.0 231.4 L1015.0 230.5 L1010.0 228.5 L1005.0 227.1 L1000.0 227.3 L995.0 228.4 L990.0 228.9 L985.0 227.6 L980.0 225.2 L975.0 222.9 L970.0 221.3 L965.0 219.8 L960.0 217.6 L955.0 214.7 L950.0 212.4 L945.0 212.0 L940.0 213.7 L935.0 216.0 L930.0 217.4 L925.0 217.4 L920.0 217.1 L915.0 217.4 L910.0 218.0 L905.0 217.9 L900.0 216.4 L895.0 214.4 L890.0 213.4 L885.0 214.2 L880.0 215.8 L875.0 216.8 L870.0 216.3 L865.0 215.0 L860.0 214.0 L855.0 213.9 L850.0 214.0 L845.0 213.2 L840.0 212.0 L835.0 211.6 L830.0 213.3 L825.0 217.0 L820.0 220.9 L815.0 223.6 L810.0 225.0 L805.0 226.1 L800.0 227.7 L795.0 229.4 L790.0 230.0 L785.0 229.0 L780.0 227.6 L775.0 227.2 L770.0 228.2 L765.0 229.8 L760.0 230.2 L755.0 229.0 L750.0 226.8 L745.0 225.1 L740.0 224.0 L735.0 222.7 L730.0 220.4 L725.0 217.6 L720.0 215.9 L715.0 216.3 L710.0 218.4 L705.0 220.4 L700.0 221.2 L695.0 220.8 L690.0 220.4 L685.0 220.6 L680.0 220.7 L675.0 219.8 L670.0 217.6 L665.0 215.3 L660.0 214.4 L655.0 215.1 L650.0 216.2 L645.0 216.3 L640.0 214.9 L635.0 213.1 L630.0 212.0 L625.0 211.6 L620.0 211.1 L615.0 209.8 L610.0 208.3 L605.0 208.3 L600.0 210.6 L595.0 214.3 L590.0 217.9 L585.0 220.2 L580.0 221.4 L575.0 222.8 L570.0 224.7 L565.0 226.4 L560.0 226.8 L555.0 225.9 L550.0 225.0 L545.0 225.4 L540.0 227.3 L535.0 229.1 L530.0 229.5 L525.0 228.3 L520.0 226.7 L515.0 225.7 L510.0 225.1 L505.0 224.0 L500.0 221.8 L495.0 219.6 L490.0 218.8 L485.0 220.2 L480.0 222.7 L475.0 224.6 L470.0 225.0 L465.0 224.6 L460.0 224.3 L455.0 224.5 L450.0 224.4 L445.0 222.8 L440.0 220.2 L435.0 217.9 L430.0 217.2 L425.0 217.8 L420.0 218.4 L415.0 217.5 L410.0 215.4 L405.0 213.2 L400.0 211.9 L395.0 211.1 L390.0 209.9 L385.0 207.9 L380.0 206.3 L375.0 206.5 L370.0 209.0 L365.0 212.5 L360.0 215.5 L355.0 217.1 L350.0 218.1 L345.0 219.5 L340.0 221.4 L335.0 222.8 L330.0 222.7 L325.0 221.8 L320.0 221.3 L315.0 222.5 L310.0 224.8 L305.0 226.7 L300.0 226.9 L295.0 225.8 L290.0 224.7 L285.0 224.4 L280.0 224.2 L275.0 223.3 L270.0 221.4 L265.0 220.0 L260.0 220.3 L255.0 222.6 L250.0 225.6 L245.0 227.5 L240.0 227.9 L235.0 227.7 L230.0 227.9 L225.0 228.3 L220.0 227.9 L215.0 226.0 L210.0 223.3 L205.0 221.4 L200.0 221.1 L195.0 221.7 L190.0 221.7 L185.0 220.1 L180.0 217.5 L175.0 215.2 L170.0 213.7 L165.0 212.5 L160.0 210.5 L155.0 208.0 L150.0 206.3 L145.0 206.8 L140.0 209.3 L135.0 212.3 L130.0 214.4 L125.0 215.2 L120.0 215.9 L115.0 217.1 L110.0 218.7 L105.0 219.4 L100.0 218.8 L95.0 217.7 L90.0 217.6 L85.0 219.2 L80.0 221.6 L75.0 223.1 L70.0 223.0 L65.0 222.0 L60.0 221.3 L55.0 221.5 L50.0 221.5 L45.0 220.6 L40.0 219.2 L35.0 218.6 L30.0 220.1 L25.0 223.3 L20.0 226.5 L15.0 228.4 L10.0 229.0 L5.0 229.3 L0.0 230.1 Z"/>
+      </clipPath>
+    </defs>
+
+    <!-- Cliff body (clipped) -->
+    <g clip-path="url(#cliffClip)">
+      <!-- Bright orange base color -->
+      <rect width="1200" height="260" fill="url(#cliffMain)"/>
+      <!-- Subtle horizontal strata (very light, like in the photo) -->
+      <path d="M-20 80 Q 300 78 600 84 Q 900 80 1220 86" stroke="#7a3a14" stroke-width="0.8" fill="none" opacity="0.22"/>
+      <path d="M-20 130 Q 300 128 600 134 Q 900 130 1220 136" stroke="#7a3a14" stroke-width="1" fill="none" opacity="0.25"/>
+      <path d="M-20 175 Q 300 172 600 180 Q 900 176 1220 183" stroke="#5e2a0c" stroke-width="1.1" fill="none" opacity="0.3"/>
+      <!-- Vertical rain streaks (dominant feature) -->
+      <rect width="1200" height="260" filter="url(#vertStreaks)" opacity="0.85"/>
+      <rect width="1200" height="260" filter="url(#vertStreaks2)" opacity="0.55"/>
+      <!-- Bright vertical highlights catching the sun -->
+      <rect width="1200" height="260" filter="url(#lightStreaks)" opacity="0.45"/>
+      <!-- Atmospheric overlay (light top, shadow base) -->
+      <rect width="1200" height="260" fill="url(#cliffAtmo)"/>
+
+      <!-- Subtle staircase descending diagonally on the right side -->
+      <!-- Just thin highlight + shadow lines per tread, no solid blocks -->
+      <g id="stairs">
+        <!-- Soft warm shadow suggesting the stair channel is recessed in the cliff -->
+        <polygon points="990,22 1010,22 890,224 870,224" fill="#3a1a08" opacity="0.22"/>
+        <!-- 19 tread highlights + soft shadow under each -->
+        <line x1="991.0" y1="24.0" x2="1009.0" y2="24.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="991.0" y1="24.8" x2="1009.0" y2="24.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="984.3" y1="35.0" x2="1002.3" y2="35.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="984.3" y1="35.8" x2="1002.3" y2="35.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="977.7" y1="46.0" x2="995.7" y2="46.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="977.7" y1="46.8" x2="995.7" y2="46.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="971.0" y1="57.0" x2="989.0" y2="57.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="971.0" y1="57.8" x2="989.0" y2="57.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="964.3" y1="68.0" x2="982.3" y2="68.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="964.3" y1="68.8" x2="982.3" y2="68.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="957.7" y1="79.0" x2="975.7" y2="79.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="957.7" y1="79.8" x2="975.7" y2="79.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="951.0" y1="90.0" x2="969.0" y2="90.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="951.0" y1="90.8" x2="969.0" y2="90.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="944.3" y1="101.0" x2="962.3" y2="101.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="944.3" y1="101.8" x2="962.3" y2="101.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="937.7" y1="112.0" x2="955.7" y2="112.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="937.7" y1="112.8" x2="955.7" y2="112.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="931.0" y1="123.0" x2="949.0" y2="123.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="931.0" y1="123.8" x2="949.0" y2="123.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="924.3" y1="134.0" x2="942.3" y2="134.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="924.3" y1="134.8" x2="942.3" y2="134.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="917.7" y1="145.0" x2="935.7" y2="145.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="917.7" y1="145.8" x2="935.7" y2="145.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="911.0" y1="156.0" x2="929.0" y2="156.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="911.0" y1="156.8" x2="929.0" y2="156.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="904.3" y1="167.0" x2="922.3" y2="167.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="904.3" y1="167.8" x2="922.3" y2="167.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="897.7" y1="178.0" x2="915.7" y2="178.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="897.7" y1="178.8" x2="915.7" y2="178.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="891.0" y1="189.0" x2="909.0" y2="189.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="891.0" y1="189.8" x2="909.0" y2="189.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="884.3" y1="200.0" x2="902.3" y2="200.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="884.3" y1="200.8" x2="902.3" y2="200.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="877.7" y1="211.0" x2="895.7" y2="211.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="877.7" y1="211.8" x2="895.7" y2="211.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <line x1="871.0" y1="222.0" x2="889.0" y2="222.0" stroke="#f8d6a8" stroke-width="0.9" opacity="0.85"/>
+        <line x1="871.0" y1="222.8" x2="889.0" y2="222.8" stroke="#1c0a04" stroke-width="1.4" opacity="0.4"/>
+        <!-- Slim handrail -->
+        <line x1="1012" y1="19" x2="892" y2="217" stroke="#5a3018" stroke-width="1.1" opacity="0.55"/>
+      </g>
+    </g>
+
+    <!-- Grass strip on top — smooth and continuous like the photo -->
+    <path d="M0 0 L1200 0 L1200 18
+             Q 1180 14 1160 17 Q 1140 13 1120 16 Q 1100 14 1080 17 Q 1060 13 1040 16
+             Q 1020 14 1000 17 Q 980 13 960 16 Q 940 14 920 17 Q 900 13 880 16
+             Q 860 14 840 17 Q 820 13 800 16 Q 780 14 760 17 Q 740 13 720 16
+             Q 700 14 680 17 Q 660 13 640 16 Q 620 14 600 17 Q 580 13 560 16
+             Q 540 14 520 17 Q 500 13 480 16 Q 460 14 440 17 Q 420 13 400 16
+             Q 380 14 360 17 Q 340 13 320 16 Q 300 14 280 17 Q 260 13 240 16
+             Q 220 14 200 17 Q 180 13 160 16 Q 140 14 120 17 Q 100 13 80 16
+             Q 60 14 40 17 Q 20 13 0 16 Z"
+          fill="url(#grassMain)"/>
+
+    <!-- Tiny bumps along the grass line (subtle, not bushy) -->
+    <ellipse cx="180" cy="2" rx="22" ry="3" fill="#7d9a48"/>
+    <ellipse cx="450" cy="2" rx="28" ry="3" fill="#7d9a48"/>
+    <ellipse cx="720" cy="2" rx="24" ry="3" fill="#7d9a48"/>
+    <ellipse cx="980" cy="2" rx="26" ry="3" fill="#7d9a48"/>
+  </svg>
+
+  <div class="sand"></div>
+  <div class="wet-sand" id="wetsand" style="bottom: 50%;"></div>
+  <canvas id="sea-canvas"></canvas>
+
+  <div class="topbar">
+    <div class="col">
+      <div class="label">Coefficient</div>
+      <div class="val" id="coef">—</div>
+    </div>
+    <div class="col right">
+      <div class="label" id="next-label">Prochaine marée</div>
+      <div class="val" id="next-tide">—</div>
+    </div>
+  </div>
+
+  <div class="center">
+    <div class="city">Pénestin</div>
+    <div class="temp-air"><span id="temp">--</span><span class="unit">°</span></div>
+    <div class="temp-water"><span class="icon">🌊</span>Eau <span id="water">--</span>°C</div>
+  </div>
+
+  <div class="bottom-panel">
+    <div class="time-row">
+      <div class="time-display">
+        <span class="sel-day" id="sel-day">—</span>
+        <span class="sel-hour" id="sel-hour">--h--</span>
+      </div>
+      <button class="now-btn" id="now-btn" onclick="goToNow()">↻ Maintenant</button>
+    </div>
+    <div class="slider-wrap">
+      <input type="range" id="time-slider" min="0" max="167" value="0" step="1" />
+    </div>
+    <div class="day-labels" id="day-labels"></div>
+    <div class="info-row">
+      <div class="tides" id="tides"></div>
+      <div class="sun">
+        <div><span class="label">Lever</span> <span class="val" id="sunrise">--</span></div>
+        <div><span class="label">Coucher</span> <span class="val" id="sunset">--</span></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="refresh" onclick="loadAll()">↻</button>
+  <div class="loading" id="loading">Chargement...</div>
+  <div class="error" id="error"></div>
+
+<script>
+  // Pénestin (Morbihan, 56)
+  const LAT = 47.4833;
+  const LON = -2.4833;
+  const TZ  = "Europe/Paris";
+  const FORECAST_DAYS = 7;
+
+  const $ = (id) => document.getElementById(id);
+
+  function fmtTime(date) {
+    return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
+  }
+  function parseLocal(s) { return new Date(s); }
+  function ymdLocal(d) {
+    return d.getFullYear() + "-" +
+      String(d.getMonth()+1).padStart(2,"0") + "-" +
+      String(d.getDate()).padStart(2,"0");
+  }
+  function showError(msg) {
+    const el = $("error");
+    el.textContent = msg;
+    el.style.display = "block";
+    setTimeout(() => el.style.display = "none", 6000);
+  }
+
+  // ===========================================================
+  //  STATE
+  // ===========================================================
+  let hourlyWeather = null;   // { time[], temperature_2m[] }
+  let hourlyMarine  = null;   // { time[], sea_level_height_msl[], sea_surface_temperature[] }
+  let dailyWeather  = null;   // { time[], sunrise[], sunset[] }
+  let allExtrema    = [];
+  let nowIndex      = 0;
+  let selectedIndex = 0;
+  let userScrubbing = false;
+
+  // ===========================================================
+  //  CANVAS — water + waves
+  // ===========================================================
+  const canvas = $("sea-canvas");
+  const ctx = canvas.getContext("2d");
+
+  let cssW = 0, cssH = 0;
+  function resizeCanvas() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cssW = window.innerWidth;
+    cssH = window.innerHeight;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px";
+    canvas.style.height = cssH + "px";
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+  }
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  let seaRatio = 0.5, seaRatioTarget = 0.5;
+  function baselineY() {
+    const seaPct = 0.12 + seaRatio * 0.66;
+    return cssH - cssH * seaPct;
+  }
+
+  // Photorealistic ocean: stacked sine swells (no visible periodicity)
+  // Long rolling swells + medium chop + short ripples
+  const SWELLS = [
+    { freq: 0.0030, speed: 0.00026, phase: 0,    amp: 22 },
+    { freq: 0.0058, speed: 0.00041, phase: 1.3,  amp: 14 },
+    { freq: 0.0094, speed: 0.00058, phase: 2.5,  amp: 8 },
+    { freq: 0.0162, speed: 0.00082, phase: 3.7,  amp: 4.5 },
+    { freq: 0.0271, speed: 0.00115, phase: 0.6,  amp: 2.5 },
+    { freq: 0.0468, speed: 0.00152, phase: 4.2,  amp: 1.4 },
+  ];
+  function surfaceY(x, t) {
+    let y = 0;
+    for (const s of SWELLS) y += Math.sin(x * s.freq + t * s.speed + s.phase) * s.amp;
+    return y;
+  }
+
+  function drawSea(t) {
+    ctx.clearRect(0, 0, cssW, cssH);
+    const base = baselineY();
+    const step = 3;
+
+    // 1. Build the surface point array
+    const N = Math.ceil(cssW / step) + 1;
+    const ys = new Array(N);
+    for (let i = 0; i < N; i++) ys[i] = base + surfaceY(i * step, t);
+
+    // 2. Sea body — single fill with vertical depth gradient
+    const grad = ctx.createLinearGradient(0, base - 60, 0, cssH);
+    grad.addColorStop(0.00, "#7fb6d0");   // sun-lit surface
+    grad.addColorStop(0.08, "#4d8eb0");
+    grad.addColorStop(0.30, "#1f5f86");
+    grad.addColorStop(0.65, "#103e5b");
+    grad.addColorStop(1.00, "#061d2f");   // deep ocean
+
+    ctx.beginPath();
+    ctx.moveTo(0, cssH);
+    ctx.lineTo(0, ys[0]);
+    for (let i = 1; i < N; i++) ctx.lineTo(i * step, ys[i]);
+    ctx.lineTo(cssW, cssH);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // 3. Clip to sea body for the surface effects
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(0, cssH);
+    ctx.lineTo(0, ys[0]);
+    for (let i = 1; i < N; i++) ctx.lineTo(i * step, ys[i]);
+    ctx.lineTo(cssW, cssH);
+    ctx.closePath();
+    ctx.clip();
+
+    // 4. Sun-glint streaks (long horizontal soft bands, slowly drifting)
+    for (let band = 0; band < 7; band++) {
+      const yOff = 18 + band * 22 + Math.sin(t * 0.0003 + band * 0.9) * 5;
+      const opacity = 0.05 + (6 - band) * 0.011;
+      const lg = ctx.createLinearGradient(0, 0, cssW, 0);
+      const drift = (t * 0.00004 + band * 0.13) % 1;
+      lg.addColorStop(Math.max(0, drift - 0.25), "rgba(255,255,255,0)");
+      lg.addColorStop(drift, `rgba(255,255,255,${opacity * 1.6})`);
+      lg.addColorStop(Math.min(1, drift + 0.25), "rgba(255,255,255,0)");
+      ctx.fillStyle = lg;
+      ctx.fillRect(0, base + yOff, cssW, 2);
+    }
+
+    // 5. Wave-flank highlights — brighten the down-slope side of each crest
+    //    (where light reflects). This adds dimension without flicker.
+    for (let i = 1; i < N - 1; i++) {
+      const slope = ys[i+1] - ys[i-1]; // positive = going down (after a crest)
+      if (slope > 0.6) {
+        const a = Math.min(0.18, slope * 0.022);
+        ctx.fillStyle = `rgba(220,235,245,${a})`;
+        ctx.fillRect(i * step, ys[i] + 0.5, step + 0.5, 5 + slope * 0.6);
+      }
+    }
+
+    ctx.restore();
+
+    // 6. Surface foam line (irregular, soft glow)
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      const x = i * step;
+      if (i === 0) ctx.moveTo(x, ys[i]);
+      else ctx.lineTo(x, ys[i]);
+    }
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = "rgba(255,255,255,0.55)";
+    ctx.shadowColor = "rgba(255,255,255,0.45)";
+    ctx.shadowBlur = 5;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // 7. Foam patches at the actual local crests (peaks)
+    //    Each peak gets a soft, irregular blob with deterministic offsets
+    //    so it doesn't flicker but slowly drifts.
+    for (let i = 2; i < N - 2; i++) {
+      if (ys[i] < ys[i-1] && ys[i] < ys[i+1] && ys[i-1] < ys[i-2] && ys[i+1] < ys[i+2]) {
+        const x = i * step;
+        const y = ys[i];
+        // Strength based on how prominent the peak is
+        const prominence = ((ys[i-2] + ys[i+2]) / 2) - y;
+        if (prominence < 1) continue;
+        const baseR = 3 + Math.min(8, prominence * 0.6);
+        for (let k = 0; k < 5; k++) {
+          const dx = Math.sin(x * 0.05 + k * 1.7 + t * 0.0008) * (5 + k * 1.5);
+          const dy = -1 + Math.cos(x * 0.07 + k * 2.1) * 1.2;
+          const r = baseR * (0.5 + k * 0.18);
+          const a = Math.max(0, 0.5 - k * 0.09) * Math.min(1, prominence / 6);
+          ctx.fillStyle = `rgba(255,255,255,${a})`;
+          ctx.beginPath();
+          ctx.ellipse(x + dx, y + dy, r, r * 0.45, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+  }
+  function tick(now) {
+    seaRatio += (seaRatioTarget - seaRatio) * (userScrubbing ? 0.18 : 0.04);
+    drawSea(now);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  function setSeaLevel(ratio) {
+    seaRatioTarget = Math.max(0, Math.min(1, ratio));
+    const seaPct = 0.12 + seaRatioTarget * 0.66;
+    $("wetsand").style.bottom = (seaPct * 100) + "%";
+  }
+
+  // ===========================================================
+  //  TIDE / DATA HELPERS
+  // ===========================================================
+  function findExtrema(times, levels) {
+    const out = [];
+    for (let i = 1; i < levels.length - 1; i++) {
+      const a = levels[i-1], b = levels[i], c = levels[i+1];
+      if (a == null || b == null || c == null) continue;
+      if (b > a && b > c) out.push({ time: parseLocal(times[i]), height: b, type: "high" });
+      else if (b < a && b < c) out.push({ time: parseLocal(times[i]), height: b, type: "low" });
+    }
+    return out;
+  }
+  function approxCoef(highH, lowH) {
+    const range = Math.max(0, highH - lowH);
+    let c = Math.round(range * 19);
+    if (c < 20) c = 20;
+    if (c > 120) c = 120;
+    return c;
+  }
+  function dayRatio(hourIdx) {
+    const time = parseLocal(hourlyMarine.time[hourIdx]);
+    const level = hourlyMarine.sea_level_height_msl[hourIdx];
+    if (level == null) return 0.5;
+    const dayStr = ymdLocal(time);
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i < hourlyMarine.time.length; i++) {
+      if (ymdLocal(parseLocal(hourlyMarine.time[i])) === dayStr) {
+        const v = hourlyMarine.sea_level_height_msl[i];
+        if (v != null) {
+          if (v < lo) lo = v;
+          if (v > hi) hi = v;
+        }
+      }
+    }
+    if (!isFinite(lo) || !isFinite(hi) || hi === lo) return 0.5;
+    return Math.max(0, Math.min(1, (level - lo) / (hi - lo)));
+  }
+  function findClosestIndex(times) {
+    const now = Date.now();
+    let best = 0, diff = Infinity;
+    for (let i = 0; i < times.length; i++) {
+      const d = Math.abs(parseLocal(times[i]).getTime() - now);
+      if (d < diff) { diff = d; best = i; }
+    }
+    return best;
+  }
+  function dayIndexFor(date) {
+    if (!dailyWeather) return -1;
+    const target = ymdLocal(date);
+    for (let i = 0; i < dailyWeather.time.length; i++) {
+      if (dailyWeather.time[i].slice(0,10) === target) return i;
+    }
+    return -1;
+  }
+  function formatSelectedTime(date) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const sel = new Date(date); sel.setHours(0,0,0,0);
+    const dayDiff = Math.round((sel - today) / 86400000);
+    let dayLabel;
+    if (dayDiff === 0) dayLabel = "Aujourd'hui";
+    else if (dayDiff === 1) dayLabel = "Demain";
+    else if (dayDiff === -1) dayLabel = "Hier";
+    else {
+      const dayName = date.toLocaleDateString("fr-FR", { weekday: "long" });
+      dayLabel = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+    }
+    return { day: dayLabel, hour: fmtTime(date) };
+  }
+
+  // ===========================================================
+  //  RENDER (called whenever selectedIndex changes)
+  // ===========================================================
+  function render(idx) {
+    if (!hourlyWeather || !hourlyMarine) return;
+    idx = Math.max(0, Math.min(hourlyWeather.time.length - 1, idx));
+    const time = parseLocal(hourlyWeather.time[idx]);
+
+    // Air temp
+    const airT = hourlyWeather.temperature_2m[idx];
+    $("temp").textContent = (airT != null) ? Math.round(airT) : "--";
+
+    // Water temp
+    const waterT = hourlyMarine.sea_surface_temperature[idx];
+    $("water").textContent = (waterT != null) ? waterT.toFixed(1) : "--";
+
+    // Sea level visual
+    setSeaLevel(dayRatio(idx));
+
+    // Sun for that day
+    const di = dayIndexFor(time);
+    if (di >= 0) {
+      $("sunrise").textContent = fmtTime(parseLocal(dailyWeather.sunrise[di]));
+      $("sunset").textContent  = fmtTime(parseLocal(dailyWeather.sunset[di]));
+    }
+
+    // Tide list for that day
+    const dayStr = ymdLocal(time);
+    const dayExtrema = allExtrema.filter(e => ymdLocal(e.time) === dayStr);
+    const tidesEl = $("tides");
+    tidesEl.innerHTML = "";
+    dayExtrema.slice(0, 4).forEach(e => {
+      const div = document.createElement("div");
+      div.className = "tide-item";
+      div.innerHTML = `
+        <div class="type">${e.type === "high" ? "▲ Pleine mer" : "▼ Basse mer"}</div>
+        <div class="time">${fmtTime(e.time)}</div>
+        <div class="height">${e.height.toFixed(2)} m</div>
+      `;
+      tidesEl.appendChild(div);
+    });
+
+    // Coef (per day)
+    const dHighs = dayExtrema.filter(e => e.type === "high").map(e => e.height);
+    const dLows  = dayExtrema.filter(e => e.type === "low").map(e => e.height);
+    if (dHighs.length && dLows.length) {
+      $("coef").textContent = approxCoef(Math.max(...dHighs), Math.min(...dLows)) + " ~";
+    } else $("coef").textContent = "—";
+
+    // Next tide after selected time
+    const future = allExtrema.filter(e => e.time.getTime() > time.getTime());
+    if (future.length) {
+      const nx = future[0];
+      $("next-label").textContent = nx.type === "high" ? "▲ Prochaine pleine mer" : "▼ Prochaine basse mer";
+      $("next-tide").textContent = fmtTime(nx.time);
+    } else {
+      $("next-tide").textContent = "—";
+    }
+
+    // Time display
+    const fmt = formatSelectedTime(time);
+    $("sel-day").textContent = fmt.day;
+    $("sel-hour").textContent = fmt.hour;
+
+    // "Now" button state
+    if (Math.abs(idx - nowIndex) <= 0) {
+      $("now-btn").classList.add("dim");
+    } else {
+      $("now-btn").classList.remove("dim");
+    }
+
+    // Slider gradient progress (for Webkit track)
+    const slider = $("time-slider");
+    const max = parseInt(slider.max, 10) || 1;
+    const pct = (idx / max) * 100;
+    slider.style.setProperty("--pct", pct + "%");
+  }
+
+  function buildDayLabels() {
+    if (!hourlyWeather) return;
+    const startTime = parseLocal(hourlyWeather.time[0]);
+    const labels = [];
+    for (let d = 0; d < FORECAST_DAYS; d++) {
+      const date = new Date(startTime);
+      date.setDate(date.getDate() + d);
+      let lbl;
+      const today = new Date(); today.setHours(0,0,0,0);
+      const dt = new Date(date); dt.setHours(0,0,0,0);
+      const diff = Math.round((dt - today) / 86400000);
+      if (diff === 0) lbl = "Auj";
+      else if (diff === 1) lbl = "Dem";
+      else lbl = date.toLocaleDateString("fr-FR", { weekday: "short" }).replace(".","");
+      labels.push(lbl);
+    }
+    $("day-labels").innerHTML = labels.map(l => `<span>${l}</span>`).join("");
+  }
+
+  function goToNow() {
+    selectedIndex = nowIndex;
+    $("time-slider").value = nowIndex;
+    render(nowIndex);
+  }
+
+  // Slider events
+  const slider = $("time-slider");
+  slider.addEventListener("input", (e) => {
+    userScrubbing = true;
+    selectedIndex = parseInt(e.target.value, 10);
+    render(selectedIndex);
+  });
+  slider.addEventListener("change", () => { userScrubbing = false; });
+  slider.addEventListener("pointerup", () => { userScrubbing = false; });
+  slider.addEventListener("touchend", () => { userScrubbing = false; });
+
+  // ===========================================================
+  //  LOAD
+  // ===========================================================
+  async function loadAll() {
+    $("loading").classList.remove("hidden");
+    try {
+      const marineUrl =
+        `https://marine-api.open-meteo.com/v1/marine?latitude=${LAT}&longitude=${LON}` +
+        `&hourly=sea_level_height_msl,sea_surface_temperature` +
+        `&timezone=${encodeURIComponent(TZ)}&forecast_days=${FORECAST_DAYS}`;
+
+      const weatherUrl =
+        `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}` +
+        `&current=temperature_2m` +
+        `&hourly=temperature_2m` +
+        `&daily=sunrise,sunset` +
+        `&timezone=${encodeURIComponent(TZ)}&forecast_days=${FORECAST_DAYS}`;
+
+      const [marineRes, weatherRes] = await Promise.all([
+        fetch(marineUrl), fetch(weatherUrl)
+      ]);
+      if (!marineRes.ok)  throw new Error("Marine API: "  + marineRes.status);
+      if (!weatherRes.ok) throw new Error("Weather API: " + weatherRes.status);
+      const marine = await marineRes.json();
+      const weather = await weatherRes.json();
+
+      hourlyMarine  = marine.hourly;
+      hourlyWeather = weather.hourly;
+      dailyWeather  = weather.daily;
+      allExtrema    = findExtrema(hourlyMarine.time, hourlyMarine.sea_level_height_msl);
+
+      // Slider range matches data length
+      const maxIdx = hourlyWeather.time.length - 1;
+      slider.max = maxIdx;
+
+      nowIndex = findClosestIndex(hourlyWeather.time);
+      // Only reset slider to "now" on first load (or if user hasn't moved it)
+      if (selectedIndex === 0 || selectedIndex > maxIdx) {
+        selectedIndex = nowIndex;
+        slider.value = nowIndex;
+      }
+
+      buildDayLabels();
+      render(selectedIndex);
+
+      $("loading").classList.add("hidden");
+    } catch (err) {
+      console.error(err);
+      showError("Erreur de chargement : " + err.message);
+      $("loading").classList.add("hidden");
+    }
+  }
+
+  loadAll();
+  // Refresh every 5 minutes (keeps "now" up to date)
+  setInterval(() => {
+    const wasOnNow = (selectedIndex === nowIndex);
+    loadAll().then(() => {
+      if (wasOnNow) goToNow();
+    });
+  }, 5 * 60 * 1000);
+</script>
+</body>
+</html>
