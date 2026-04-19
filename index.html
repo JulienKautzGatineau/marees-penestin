@@ -84,16 +84,13 @@
     z-index: 1;
   }
 
+  /* Wet-sand element kept but invisible — the canvas now draws the foam wash */
   .wet-sand {
     position: fixed; left: 0; right: 0;
-    height: 50px;
-    background: linear-gradient(to bottom,
-      rgba(80, 40, 20, 0.0) 0%,
-      rgba(80, 40, 20, 0.3) 50%,
-      rgba(80, 40, 20, 0.55) 100%);
+    height: 0;
     z-index: 2;
-    transition: bottom 1.6s cubic-bezier(.4,0,.2,1);
     pointer-events: none;
+    visibility: hidden;
   }
 
   #sea-canvas {
@@ -103,29 +100,90 @@
     pointer-events: none;
   }
 
-  /* Family group drifts slowly right → left across the beach */
+  /* Family group — JS-driven, random direction each crossing */
   .family-svg {
     position: fixed;
-    bottom: 50%;
+    bottom: 35%;
     left: 0;
     width: 260px;
     height: 42px;
     z-index: 4;
     pointer-events: none;
-    transition: bottom 1.6s cubic-bezier(.4,0,.2,1);
-    animation: familyWalk 75s linear infinite;
     filter: drop-shadow(0 2px 2.5px rgba(0,0,0,0.35));
     will-change: transform;
   }
-  @keyframes familyWalk {
-    0%   { transform: translateX(110vw) translateY(0); }
-    33%  { transform: translateX(72vw) translateY(-2px); }
-    66%  { transform: translateX(30vw) translateY(2px); }
-    100% { transform: translateX(-100%) translateY(-1px); }
-  }
   @media (max-width: 480px) {
-    .family-svg { width: 200px; height: 32px; animation-duration: 60s; }
+    .family-svg { width: 200px; height: 32px; }
   }
+
+  /* === BIRDS — gulls flying across the sky === */
+  .bird {
+    position: fixed;
+    width: 38px;
+    height: 14px;
+    z-index: 7;
+    pointer-events: none;
+    opacity: 0;
+    animation: birdFly 26s linear infinite;
+  }
+  .bird path { animation: wingFlap 0.45s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+  .bird.b1 { top: 4vh;   width: 42px; animation-delay: 0s;   animation-duration: 28s; }
+  .bird.b2 { top: 9vh;   width: 32px; animation-delay: 11s;  animation-duration: 32s; }
+  .bird.b3 { top: 6.5vh; width: 36px; animation-delay: 22s;  animation-duration: 25s; }
+  .bird.b4 { top: 12vh;  width: 28px; animation-delay: 38s;  animation-duration: 30s; }
+  @keyframes birdFly {
+    0%   { left: -8%;  opacity: 0; }
+    8%   { opacity: 0.85; }
+    50%  { transform: translateY(-6px); }
+    92%  { opacity: 0.85; }
+    100% { left: 108%; opacity: 0; }
+  }
+  @keyframes wingFlap {
+    0%, 100% { transform: scaleY(1); }
+    50%      { transform: scaleY(0.4); }
+  }
+
+  /* === PARAGLIDERS — JS-driven random drift over the cliff (when weather good) === */
+  .paraglider {
+    position: fixed;
+    left: 0; top: 0;
+    width: 80px;
+    height: 46px;
+    z-index: 6;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+    will-change: transform;
+  }
+  .paraglider.show { opacity: 1; }
+
+  /* === FLYING SAND/LEAVES on the beach (intensity tied to wind) === */
+  .particle {
+    position: fixed;
+    width: 4px; height: 4px;
+    z-index: 4;
+    pointer-events: none;
+    opacity: 0;
+    border-radius: 50%;
+    background: rgba(80, 50, 25, 0.55);
+    animation: particleFly linear infinite;
+  }
+  .particle.show { animation-name: particleFly; }
+  .particle.q1 { top: 55vh; animation-duration: 6s; animation-delay: 0s; }
+  .particle.q2 { top: 60vh; animation-duration: 7.5s; animation-delay: 1.2s; }
+  .particle.q3 { top: 63vh; animation-duration: 5.5s; animation-delay: 2.6s; }
+  .particle.q4 { top: 58vh; animation-duration: 8s; animation-delay: 4s; }
+  .particle.q5 { top: 65vh; animation-duration: 6.5s; animation-delay: 0.6s; }
+  .particle.q6 { top: 52vh; animation-duration: 9s; animation-delay: 3s; }
+  @keyframes particleFly {
+    0%   { left: 105%; opacity: 0; transform: translateY(0); }
+    10%  { opacity: 0.7; }
+    50%  { transform: translateY(-12px); }
+    90%  { opacity: 0.7; }
+    100% { left: -5%; opacity: 0; transform: translateY(2px); }
+  }
+  /* Hide all particles by default; JS adds .show when wind is strong */
+  body:not(.windy) .particle { animation-play-state: paused; opacity: 0 !important; }
 
   /* Per-character wandering — each one drifts around its base position
      with its own period, amplitude and rhythm so the group moves naturally */
@@ -582,6 +640,23 @@
     .bottom-panel { padding: 6px 14px max(6px, env(safe-area-inset-bottom, 6px)); }
     .info-row { margin-top: 4px; }
   }
+
+  /* === MOBILE — birds + paragliders smaller === */
+  @media (max-width: 480px) {
+    .paraglider { width: 56px; height: 32px; }
+    .bird.b1 { width: 32px; height: 12px; }
+    .bird.b2 { width: 24px; height: 9px; }
+    .bird.b3 { width: 28px; height: 11px; }
+    .bird.b4 { width: 22px; height: 8px; }
+    .particle { width: 3px; height: 3px; }
+  }
+  @media (max-width: 380px) {
+    .paraglider { width: 48px; height: 27px; }
+    .bird.b1 { width: 26px; }
+    .bird.b2 { width: 20px; }
+    .bird.b3 { width: 24px; }
+    .bird.b4 { width: 18px; }
+  }
 </style>
 </head>
 <body>
@@ -686,11 +761,87 @@
     <ellipse cx="450" cy="2" rx="28" ry="3" fill="#7d9a48"/>
     <ellipse cx="720" cy="2" rx="24" ry="3" fill="#7d9a48"/>
     <ellipse cx="980" cy="2" rx="26" ry="3" fill="#7d9a48"/>
+
+    <!-- Vegetation tufts emerging from cracks (more natural look) -->
+    <ellipse cx="135" cy="58" rx="6" ry="3" fill="#5a7a36" opacity="0.85"/>
+    <ellipse cx="270" cy="92" rx="5" ry="2.5" fill="#4a6630" opacity="0.8"/>
+    <ellipse cx="425" cy="115" rx="7" ry="3" fill="#5a7a36" opacity="0.85"/>
+    <ellipse cx="560" cy="78" rx="4" ry="2" fill="#4a6630" opacity="0.75"/>
+    <ellipse cx="700" cy="135" rx="6" ry="3" fill="#5a7a36" opacity="0.8"/>
+    <ellipse cx="850" cy="98" rx="5" ry="2.5" fill="#4a6630" opacity="0.85"/>
+    <ellipse cx="1010" cy="148" rx="7" ry="3.2" fill="#5a7a36" opacity="0.8"/>
+    <ellipse cx="1140" cy="105" rx="4" ry="2" fill="#4a6630" opacity="0.78"/>
   </svg>
 
   <div class="sand"></div>
   <div class="wet-sand" id="wetsand" style="bottom: 50%;"></div>
   <canvas id="sea-canvas"></canvas>
+
+  <!-- Birds (gulls) flying across the sky at random intervals -->
+  <svg class="bird b1" viewBox="0 0 22 8"><path d="M0 5 Q 5.5 0 11 5 Q 16.5 0 22 5" stroke="#1c1c1c" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
+  <svg class="bird b2" viewBox="0 0 22 8"><path d="M0 5 Q 5.5 0 11 5 Q 16.5 0 22 5" stroke="#1c1c1c" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
+  <svg class="bird b3" viewBox="0 0 22 8"><path d="M0 5 Q 5.5 0 11 5 Q 16.5 0 22 5" stroke="#1c1c1c" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
+  <svg class="bird b4" viewBox="0 0 22 8"><path d="M0 5 Q 5.5 0 11 5 Q 16.5 0 22 5" stroke="#1c1c1c" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
+
+  <!-- Paragliders (5 with different colors, JS-driven random wandering) -->
+  <svg id="paraglider1" class="paraglider" viewBox="0 0 50 30">
+    <path d="M2 8 Q 25 0 48 8 Q 47 11 42 9 Q 25 5 8 9 Q 3 11 2 8 Z" fill="#e74c3c"/>
+    <path d="M2 8 Q 12 4 22 8" stroke="#a83020" stroke-width="0.4" fill="none"/>
+    <line x1="8" y1="10" x2="22" y2="22" stroke="#444" stroke-width="0.5"/>
+    <line x1="42" y1="10" x2="28" y2="22" stroke="#444" stroke-width="0.5"/>
+    <line x1="14" y1="10" x2="24" y2="22" stroke="#444" stroke-width="0.4"/>
+    <line x1="36" y1="10" x2="26" y2="22" stroke="#444" stroke-width="0.4"/>
+    <circle cx="25" cy="23" r="1.6" fill="#1a1a1a"/>
+    <rect x="23" y="24" width="4" height="3.5" fill="#3b7ad9"/>
+  </svg>
+  <svg id="paraglider2" class="paraglider" viewBox="0 0 50 30">
+    <path d="M2 8 Q 25 0 48 8 Q 47 11 42 9 Q 25 5 8 9 Q 3 11 2 8 Z" fill="#fdd835"/>
+    <path d="M2 8 Q 12 4 22 8" stroke="#c4a01a" stroke-width="0.4" fill="none"/>
+    <line x1="8" y1="10" x2="22" y2="22" stroke="#444" stroke-width="0.5"/>
+    <line x1="42" y1="10" x2="28" y2="22" stroke="#444" stroke-width="0.5"/>
+    <line x1="14" y1="10" x2="24" y2="22" stroke="#444" stroke-width="0.4"/>
+    <line x1="36" y1="10" x2="26" y2="22" stroke="#444" stroke-width="0.4"/>
+    <circle cx="25" cy="23" r="1.6" fill="#1a1a1a"/>
+    <rect x="23" y="24" width="4" height="3.5" fill="#6bb84f"/>
+  </svg>
+  <svg id="paraglider3" class="paraglider" viewBox="0 0 50 30">
+    <path d="M2 8 Q 25 0 48 8 Q 47 11 42 9 Q 25 5 8 9 Q 3 11 2 8 Z" fill="#3b7ad9"/>
+    <path d="M2 8 Q 12 4 22 8" stroke="#1a4080" stroke-width="0.4" fill="none"/>
+    <line x1="8" y1="10" x2="22" y2="22" stroke="#444" stroke-width="0.5"/>
+    <line x1="42" y1="10" x2="28" y2="22" stroke="#444" stroke-width="0.5"/>
+    <line x1="14" y1="10" x2="24" y2="22" stroke="#444" stroke-width="0.4"/>
+    <line x1="36" y1="10" x2="26" y2="22" stroke="#444" stroke-width="0.4"/>
+    <circle cx="25" cy="23" r="1.6" fill="#1a1a1a"/>
+    <rect x="23" y="24" width="4" height="3.5" fill="#e74c3c"/>
+  </svg>
+  <svg id="paraglider4" class="paraglider" viewBox="0 0 50 30">
+    <path d="M2 8 Q 25 0 48 8 Q 47 11 42 9 Q 25 5 8 9 Q 3 11 2 8 Z" fill="#ff6b35"/>
+    <path d="M2 8 Q 12 4 22 8" stroke="#c44818" stroke-width="0.4" fill="none"/>
+    <line x1="8" y1="10" x2="22" y2="22" stroke="#444" stroke-width="0.5"/>
+    <line x1="42" y1="10" x2="28" y2="22" stroke="#444" stroke-width="0.5"/>
+    <line x1="14" y1="10" x2="24" y2="22" stroke="#444" stroke-width="0.4"/>
+    <line x1="36" y1="10" x2="26" y2="22" stroke="#444" stroke-width="0.4"/>
+    <circle cx="25" cy="23" r="1.6" fill="#1a1a1a"/>
+    <rect x="23" y="24" width="4" height="3.5" fill="#fdd835"/>
+  </svg>
+  <svg id="paraglider5" class="paraglider" viewBox="0 0 50 30">
+    <path d="M2 8 Q 25 0 48 8 Q 47 11 42 9 Q 25 5 8 9 Q 3 11 2 8 Z" fill="#9b59b6"/>
+    <path d="M2 8 Q 12 4 22 8" stroke="#5e3578" stroke-width="0.4" fill="none"/>
+    <line x1="8" y1="10" x2="22" y2="22" stroke="#444" stroke-width="0.5"/>
+    <line x1="42" y1="10" x2="28" y2="22" stroke="#444" stroke-width="0.5"/>
+    <line x1="14" y1="10" x2="24" y2="22" stroke="#444" stroke-width="0.4"/>
+    <line x1="36" y1="10" x2="26" y2="22" stroke="#444" stroke-width="0.4"/>
+    <circle cx="25" cy="23" r="1.6" fill="#1a1a1a"/>
+    <rect x="23" y="24" width="4" height="3.5" fill="#fdd835"/>
+  </svg>
+
+  <!-- Sand particles flying when wind is strong -->
+  <div class="particle q1"></div>
+  <div class="particle q2"></div>
+  <div class="particle q3"></div>
+  <div class="particle q4"></div>
+  <div class="particle q5"></div>
+  <div class="particle q6"></div>
 
   <!-- Family of 5 + husky, in color, walking with cartoon bounce -->
   <svg id="family" class="family-svg" viewBox="0 0 360 50" preserveAspectRatio="xMidYMax meet">
@@ -877,9 +1028,40 @@
   window.addEventListener("resize", resizeCanvas);
 
   let seaRatio = 0.5, seaRatioTarget = 0.5;
+  let windSpeed = 12, windSpeedTarget = 12;  // km/h, smoothed
+  let weatherCode = 1;  // WMO code (0=clear, 1=mainly clear, 2=partly cloudy, etc.)
   function baselineY() {
     const seaPct = 0.12 + seaRatio * 0.66;
     return cssH - cssH * seaPct;
+  }
+  // Wind-based wave amplification: 0 km/h → 0.45, 15 km/h → 1.0, 40+ km/h → 2.5
+  function windFactor() {
+    return 0.45 + Math.min(2.0, windSpeed / 18);
+  }
+
+  // Wash cycle — simulates a wave rolling onto the beach then retreating
+  // Returns { offset: 0..30 px (how high the wave reaches above its baseline),
+  //           intensity: 0..1 (foam strength) }
+  function washInfo(t) {
+    const period = 5400;  // 5.4 sec per full wash cycle
+    const phase = (t % period) / period;
+    let offset, intensity;
+    if (phase < 0.30) {
+      // RUSH IN — quick, ease-out
+      const ep = phase / 0.30;
+      const eased = Math.sin(ep * Math.PI / 2);
+      offset = eased * 28;
+      intensity = 0.4 + eased * 0.6;
+    } else {
+      // RETREAT — slower, ease-in
+      const ep = (phase - 0.30) / 0.70;
+      const eased = 1 - ep * ep;  // quadratic ease-in
+      offset = eased * 28;
+      intensity = eased * 0.85;
+    }
+    // Wind makes the wash bigger
+    const wf = (windSpeed / 18);
+    return { offset: offset * (0.7 + wf * 0.5), intensity };
   }
 
   // Photorealistic ocean: stacked sine swells (no visible periodicity)
@@ -900,13 +1082,16 @@
 
   function drawSea(t) {
     ctx.clearRect(0, 0, cssW, cssH);
-    const base = baselineY();
+    // Wash makes the entire waterline rise (rush in) then fall (retreat)
+    const wash = washInfo(t);
+    const base = baselineY() - wash.offset;
     const step = 3;
 
-    // 1. Build the surface point array
+    // 1. Build the surface point array (amplitudes scaled by wind)
+    const wf = windFactor();
     const N = Math.ceil(cssW / step) + 1;
     const ys = new Array(N);
-    for (let i = 0; i < N; i++) ys[i] = base + surfaceY(i * step, t);
+    for (let i = 0; i < N; i++) ys[i] = base + surfaceY(i * step, t) * wf;
 
     // 2. Sea body — single fill with vertical depth gradient
     const grad = ctx.createLinearGradient(0, base - 60, 0, cssH);
@@ -961,57 +1146,226 @@
 
     ctx.restore();
 
-    // 6. Surface foam line (irregular, soft glow)
+    // 6. Foam BAND — a thick semi-transparent white zone hugging the wave top
+    //    (always present, more intense during a wash-in)
+    ctx.save();
     ctx.beginPath();
     for (let i = 0; i < N; i++) {
       const x = i * step;
       if (i === 0) ctx.moveTo(x, ys[i]);
       else ctx.lineTo(x, ys[i]);
     }
-    ctx.lineWidth = 1.4;
-    ctx.strokeStyle = "rgba(255,255,255,0.55)";
-    ctx.shadowColor = "rgba(255,255,255,0.45)";
-    ctx.shadowBlur = 5;
+    // Trace 5px down so we close a thin band
+    for (let i = N - 1; i >= 0; i--) {
+      ctx.lineTo(i * step, ys[i] + 5);
+    }
+    ctx.closePath();
+    ctx.fillStyle = `rgba(255,255,255,${0.32 + wash.intensity * 0.35})`;
+    ctx.fill();
+    ctx.restore();
+
+    // 7. Surface foam line — bright crisp line on the very top of the wave
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      const x = i * step;
+      if (i === 0) ctx.moveTo(x, ys[i]);
+      else ctx.lineTo(x, ys[i]);
+    }
+    ctx.lineWidth = 1.8 + wash.intensity * 2.2;
+    ctx.strokeStyle = `rgba(255,255,255,${0.7 + wash.intensity * 0.3})`;
+    ctx.shadowColor = `rgba(255,255,255,${0.55 + wash.intensity * 0.4})`;
+    ctx.shadowBlur = 6 + wash.intensity * 14;
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // 7. Foam patches at the actual local crests (peaks)
-    //    Each peak gets a soft, irregular blob with deterministic offsets
-    //    so it doesn't flicker but slowly drifts.
+    // 8. Foam patches at the local crests — bigger and more during a wave wash-in
     for (let i = 2; i < N - 2; i++) {
       if (ys[i] < ys[i-1] && ys[i] < ys[i+1] && ys[i-1] < ys[i-2] && ys[i+1] < ys[i+2]) {
         const x = i * step;
         const y = ys[i];
-        // Strength based on how prominent the peak is
         const prominence = ((ys[i-2] + ys[i+2]) / 2) - y;
-        if (prominence < 1) continue;
-        const baseR = 3 + Math.min(8, prominence * 0.6);
-        for (let k = 0; k < 5; k++) {
-          const dx = Math.sin(x * 0.05 + k * 1.7 + t * 0.0008) * (5 + k * 1.5);
-          const dy = -1 + Math.cos(x * 0.07 + k * 2.1) * 1.2;
-          const r = baseR * (0.5 + k * 0.18);
-          const a = Math.max(0, 0.5 - k * 0.09) * Math.min(1, prominence / 6);
+        if (prominence < 0.5) continue;
+        const baseR = 4 + Math.min(10, prominence * 0.8) * (0.8 + wash.intensity * 0.7);
+        for (let k = 0; k < 6; k++) {
+          const dx = Math.sin(x * 0.05 + k * 1.7 + t * 0.0008) * (6 + k * 1.8);
+          const dy = -1 + Math.cos(x * 0.07 + k * 2.1) * 1.5;
+          const r = baseR * (0.55 + k * 0.16);
+          const a = Math.max(0, 0.55 - k * 0.08) * Math.min(1, prominence / 5) * (0.7 + wash.intensity * 0.4);
           ctx.fillStyle = `rgba(255,255,255,${a})`;
           ctx.beginPath();
-          ctx.ellipse(x + dx, y + dy, r, r * 0.45, 0, 0, Math.PI * 2);
+          ctx.ellipse(x + dx, y + dy, r, r * 0.5, 0, 0, Math.PI * 2);
           ctx.fill();
         }
       }
     }
+
+    // 9. Persistent bubbly foam scattered along the wave (always some, more during wash-in)
+    const bubbleCount = Math.floor(45 + wash.intensity * 50);
+    for (let i = 0; i < bubbleCount; i++) {
+      const seed = i * 79 + 13;
+      const xPos = ((Math.sin(seed) * 0.5 + 0.5) * cssW + Math.sin(t * 0.0006 + i) * 18) % cssW;
+      const xClamped = Math.max(0, Math.min(cssW - 1, xPos));
+      const idx = Math.max(0, Math.min(N - 1, Math.floor(xClamped / step)));
+      // Position: just above the wave line, varying with wash
+      const yAbove = (Math.sin(seed * 1.3) * 0.5 + 0.5) * (4 + wash.offset * 0.7);
+      const y = ys[idx] - yAbove;
+      const r = 0.7 + ((Math.sin(seed * 2.1) * 0.5 + 0.5)) * (1.4 + wash.intensity * 1.2);
+      if (r < 0.3) continue;
+      const a = (0.45 + wash.intensity * 0.35) * (0.6 + Math.sin(seed * 3.7) * 0.4);
+      ctx.fillStyle = `rgba(255,255,255,${a})`;
+      ctx.beginPath();
+      ctx.arc(xClamped, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 10. Foam streaks on the wave surface (slight horizontal trails behind the foam)
+    if (wash.intensity > 0.35) {
+      ctx.strokeStyle = `rgba(255,255,255,${0.18 * wash.intensity})`;
+      ctx.lineWidth = 1;
+      for (let s = 0; s < 12; s++) {
+        const sx = (s * cssW / 12 + Math.sin(t * 0.0004 + s) * 30) % cssW;
+        const idxS = Math.max(0, Math.min(N - 1, Math.floor(sx / step)));
+        const sy = ys[idxS] + 6;
+        ctx.beginPath();
+        ctx.moveTo(sx - 18, sy);
+        ctx.lineTo(sx + 18, sy + 1);
+        ctx.stroke();
+      }
+    }
   }
+  // === FAMILY: JS-driven random crossings (left↔right, varying speed, pauses) ===
+  let famX = window.innerWidth + 200;
+  let famDir = -1;
+  let famSpeed = 30;
+  let famActive = false;
+  let famWaitUntil = 0;
+  function familyStartNewWalk() {
+    famDir = Math.random() > 0.5 ? -1 : 1;
+    famSpeed = 22 + Math.random() * 26;  // 22-48 px/s
+    const fw = parseFloat(getComputedStyle($("family")).width) || 240;
+    famX = famDir === -1 ? window.innerWidth + 60 : -fw - 40;
+    famActive = true;
+  }
+  // Start first walk after 2 seconds
+  setTimeout(familyStartNewWalk, 2000);
+
+  function familyUpdate(now, dt) {
+    const fam = $("family");
+    if (!famActive) {
+      if (now > famWaitUntil) familyStartNewWalk();
+      else { fam.style.opacity = "0"; return; }
+    }
+    fam.style.opacity = "1";
+    famX += famSpeed * famDir * dt;
+    const fw = parseFloat(getComputedStyle(fam).width) || 240;
+    if ((famDir === -1 && famX < -fw - 50) || (famDir === 1 && famX > window.innerWidth + 60)) {
+      famActive = false;
+      famWaitUntil = now + 6000 + Math.random() * 28000;  // 6-34s pause
+      return;
+    }
+    const yWave = Math.sin(now * 0.0009) * 3;
+    // scaleX(-1) flips horizontally so the family faces their walking direction
+    const flip = famDir === 1 ? " scaleX(-1)" : "";
+    fam.style.left = famX + "px";
+    fam.style.transform = `translateY(${yWave}px)` + flip;
+  }
+
+  // === PARAGLIDERS: 5 independent random wanderers ===
+  const paragliders = [
+    { id: "paraglider1", x: 0, y: 40, baseVx: 20,  vy: 0, t: Math.random() * 1000, active: false, waitUntil: 1500 },
+    { id: "paraglider2", x: 0, y: 60, baseVx: -18, vy: 0, t: Math.random() * 1000, active: false, waitUntil: 4000 },
+    { id: "paraglider3", x: 0, y: 30, baseVx: 22,  vy: 0, t: Math.random() * 1000, active: false, waitUntil: 8000 },
+    { id: "paraglider4", x: 0, y: 75, baseVx: -15, vy: 0, t: Math.random() * 1000, active: false, waitUntil: 13000 },
+    { id: "paraglider5", x: 0, y: 50, baseVx: 16,  vy: 0, t: Math.random() * 1000, active: false, waitUntil: 18000 },
+  ];
+  function paraActivate(p) {
+    p.active = true;
+    const dir = Math.random() > 0.5 ? 1 : -1;
+    // Constant baseline horizontal speed (won't get damped to zero)
+    p.baseVx = dir * (16 + Math.random() * 22);  // 16-38 px/s
+    p.vy = (Math.random() - 0.5) * 4;
+    p.x = dir > 0 ? -90 : window.innerWidth + 90;
+    p.y = 30 + Math.random() * 90;
+    p.t = Math.random() * 1000;
+  }
+  function paraUpdate(p, now, dt) {
+    const el = $(p.id);
+    if (!el.classList.contains("show")) {
+      p.active = false;
+      el.style.transform = "translate(-3000px, 0)";
+      return;
+    }
+    if (!p.active) {
+      if (now > p.waitUntil) paraActivate(p);
+      else {
+        el.style.transform = "translate(-3000px, 0)";
+        return;
+      }
+    }
+    p.t += dt;
+    // Horizontal: constant baseline + small wandering perturbation (no damping)
+    const wanderX = Math.sin(p.t * 0.7 + p.id.length) * 5;
+    const vx = p.baseVx + wanderX;
+    // Vertical: gentle random forces with damping + soft bounds
+    p.vy += (Math.sin(p.t * 0.9 + p.id.length * 2) * 6 + Math.cos(p.t * 1.5) * 3) * dt;
+    p.vy *= 0.97;
+    if (p.y < 20)  p.vy += 15 * dt;
+    if (p.y > 140) p.vy -= 15 * dt;
+    // Apply
+    p.x += vx * dt;
+    p.y += p.vy * dt;
+    // Off-screen → deactivate, schedule next appearance
+    if (p.x < -180 || p.x > window.innerWidth + 180) {
+      p.active = false;
+      p.waitUntil = now + 10000 + Math.random() * 30000;
+      return;
+    }
+    const flip = p.baseVx < 0 ? -1 : 1;
+    el.style.transform = `translate(${p.x}px, ${p.y}px) scaleX(${flip})`;
+  }
+
+  // === Main animation loop ===
+  let lastTime = performance.now();
   function tick(now) {
-    seaRatio += (seaRatioTarget - seaRatio) * (userScrubbing ? 0.18 : 0.04);
+    const dt = Math.min(0.1, (now - lastTime) / 1000);
+    lastTime = now;
+    // Smooth interpolation toward targets (faster while user is scrubbing)
+    const k = userScrubbing ? 0.20 : 0.045;
+    seaRatio    += (seaRatioTarget    - seaRatio)    * k;
+    windSpeed   += (windSpeedTarget   - windSpeed)   * 0.03;
     drawSea(now);
+    // Drive DOM positions from the SAME interpolated seaRatio so they stay in sync
+    const seaPct = 0.12 + seaRatio * 0.66;
+    // Push wet-sand 55px below waterline so its dark bottom is always hidden under sea waves
+    $("wetsand").style.bottom = `calc(${seaPct * 100}% - 55px)`;
+    // Family stays on dry beach
+    const familyPct = Math.max(0.32, seaPct + 0.06);
+    $("family").style.bottom = (familyPct * 100) + "%";
+    // Animate family + paragliders
+    familyUpdate(now, dt);
+    paragliders.forEach(p => paraUpdate(p, now, dt));
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
 
   function setSeaLevel(ratio) {
     seaRatioTarget = Math.max(0, Math.min(1, ratio));
-    const seaPct = 0.12 + seaRatioTarget * 0.66;
-    $("wetsand").style.bottom = (seaPct * 100) + "%";
-    // Family walks just above the wet-sand line, on dry beach
-    $("family").style.bottom = `calc(${seaPct * 100}% + 6px)`;
+  }
+  function setWind(kmh) {
+    windSpeedTarget = Math.max(0, Math.min(80, kmh));
+    // Toggle "windy" class on body — particles only animate when there's real wind
+    if (kmh >= 18) document.body.classList.add("windy");
+    else           document.body.classList.remove("windy");
+  }
+  function setWeather(code) {
+    weatherCode = code;
+    // Show paragliders when clear/mainly clear/partly cloudy/overcast (no rain) AND flyable wind
+    const goodWeather = [0, 1, 2, 3].includes(code);
+    const flyableWind = windSpeedTarget >= 5 && windSpeedTarget <= 38;
+    const show = goodWeather && flyableWind;
+    for (let i = 1; i <= 5; i++) {
+      $("paraglider" + i).classList.toggle("show", show);
+    }
   }
 
   // ===========================================================
@@ -1102,6 +1456,14 @@
 
     // Sea level visual
     setSeaLevel(dayRatio(idx));
+
+    // Wind for the selected hour → drives wave amplitude + particles + paragliders
+    const wind = hourlyWeather.windspeed_10m?.[idx];
+    if (wind != null) setWind(wind);
+
+    // Weather code for the selected hour → drives paraglider visibility
+    const wcode = hourlyWeather.weathercode?.[idx];
+    if (wcode != null) setWeather(wcode);
 
     // Sun for that day
     const di = dayIndexFor(time);
@@ -1211,8 +1573,8 @@
 
       const weatherUrl =
         `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}` +
-        `&current=temperature_2m` +
-        `&hourly=temperature_2m` +
+        `&current=temperature_2m,windspeed_10m,weathercode` +
+        `&hourly=temperature_2m,windspeed_10m,weathercode` +
         `&daily=sunrise,sunset` +
         `&timezone=${encodeURIComponent(TZ)}&forecast_days=${FORECAST_DAYS}`;
 
